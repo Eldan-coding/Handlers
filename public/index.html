@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API RESTful</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <h1 class="text-center">Datos del producto</h1>
+    <main>
+        <form class="w-50 mx-auto" method="POST" action="/api/productos/guardar">
+            <div class="mb-3">
+                <label for="titulo" class="form-label">Title</label>
+                <input type="text" class="form-control" name="title" id="titulo" placeholder="Title">
+            </div>
+            <div class="mb-3">
+                <label for="precio" class="form-label">Price</label>
+                <input type="number" class="form-control" name="price" id="precio" placeholder="Price">
+            </div>
+            <div class="mb-3">
+                <label for="miniatura" class="form-label">Thumbnail</label>
+                <input type="text" class="form-control" name="thumbnail" id="miniatura" placeholder="Thumbnail">
+            </div>
+            <button type="submit" class="btn btn-success w-25 mx-auto">Guardar</button>
+        </form>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

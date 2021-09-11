@@ -1,0 +1,12 @@
+[
+	{
+		"title": "Teclado",
+		"price": 162,
+		"thumbnail": "https://w7.pngwing.com/pngs/566/418/png-transparent-computer-keyboard-gaming-keypad-personal-computer-computer-hardware-keyboard-miscellaneous-electronics-computer-keyboard-thumbnail.png"
+	},
+	{
+		"title": "mouse",
+		"price": 200,
+		"thumbnail": "https://w7.pngwing.com/pngs/768/457/png-transparent-computer-mouse-razer-inc-computer-keyboard-gamer-video-game-pc-mouse-electronics-mouse-electronic-device-thumbnail.png"
+	}
+]
