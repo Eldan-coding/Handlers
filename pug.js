@@ -54,7 +54,7 @@ router.get('/', (req,res)=>{
 });
 
 router.get('/productos/vista',(req,res)=>{
-    res.render('index.pug', {productos: productos});
+    res.render('layouts/index.pug', {productos: productos});
 });
 
 router.get('/productos/listar',(req,res)=>{
