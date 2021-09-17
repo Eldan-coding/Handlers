@@ -1,0 +1,12 @@
+table.table.table-dark.table-striped.text-center
+    tbody
+        tr
+            th Nombre
+            th Precio
+            th Foto
+        each val in productos
+            tr
+                td=val.title
+                td=val.price
+                td
+                    img(width="100px", src=val.thumbnail, alt="")

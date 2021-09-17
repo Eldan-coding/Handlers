@@ -1,5 +1,4 @@
 import express  from "express";
-import handlebars  from "express-handlebars";
 
 const app= express();
 const PORT= 8080;
@@ -47,26 +46,15 @@ const server = app.listen (PORT, ()=>{
 });
 server.on('error', error=>console.log('Error en servidor',error));
 
-
-app.engine(
-    "hbs",
-    handlebars({
-        extname: ".hbs",
-        defaultLayout: "index.hbs",
-        layoutsDir: "views/layouts",
-        partialsDir: "views/partials"
-    })
-);
-
 app.set('views', './views'); // especifica el directorio de vistas
-app.set('view engine', 'hbs'); // registra el motor de plantillas
+app.set('view engine', 'pug'); // registra el motor de plantillas
 
 router.get('/', (req,res)=>{
     res.send("<h1>Inicio Del Programa</h1>");
 });
 
 router.get('/productos/vista',(req,res)=>{
-    res.render('main', {productos: productos});
+    res.render('index.pug', {productos: productos});
 });
 
 router.get('/productos/listar',(req,res)=>{
