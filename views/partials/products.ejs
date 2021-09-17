@@ -1,0 +1,16 @@
+<table class="table table-dark table-striped text-center">
+    <tbody>
+        <tr>
+            <th>Nombre</th>
+            <th>Precio</th>
+            <th>Foto</th>
+        </tr>
+        <% productos.forEach(function(producto) { %>
+        <tr>
+            <td><%= producto.title %></td>
+            <td><%= producto.price %></td>
+            <td><img width="100px" src="<%= producto.thumbnail %>" alt=""></td>
+        </tr>
+        <% }); %>
+    </tbody>
+</table>
