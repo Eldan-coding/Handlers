@@ -1,9 +1,14 @@
 import express  from "express";
 import handlebars  from "express-handlebars";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import fs from "file-system";
 
 const app= express();
 const PORT= 8080;
 const router = express.Router();
+const http=new createServer(app);
+const io = new Server(http);
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
@@ -42,7 +47,7 @@ const addProduct=(P)=>{
     productos.push(P);
 }
 
-const server = app.listen (PORT, ()=>{
+const server = http.listen (PORT, ()=>{
     console.log("Servidor HTTP corriendo en", server.address().port);
 });
 server.on('error', error=>console.log('Error en servidor',error));
@@ -66,7 +71,16 @@ router.get('/', (req,res)=>{
 });
 
 router.get('/productos/vista',(req,res)=>{
+    //const partialFile=fs.readFileSync(process.cwd()+'/views/partials/products.hbs',"utf-8");
     res.render('main', {productos: productos});
+});
+
+io.on('connection', (socket) =>{
+    socket.emit("array", productos);
+    socket.on('update', (datacliente)=>{
+        productos=datacliente;
+        io.sockets.emit('broadcast', productos)
+    });
 });
 
 router.get('/productos/listar',(req,res)=>{
