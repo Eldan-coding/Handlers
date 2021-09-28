@@ -19,6 +19,7 @@ app.use(express.static('public'));
 
 let productos=[];
 let id=0;
+const mensajes=JSON.parse(fs.readFileSync('public/chat.txt',"utf-8"));
 
 class Producto{
     constructor(title,price,thumbnail,id){
@@ -47,6 +48,10 @@ const addProduct=(P)=>{
     productos.push(P);
 }
 
+const addConversa=(chat)=>{
+    mensajes.push(chat);
+}
+
 const server = http.listen (PORT, ()=>{
     console.log("Servidor HTTP corriendo en", server.address().port);
 });
@@ -71,8 +76,7 @@ router.get('/', (req,res)=>{
 });
 
 router.get('/productos/vista',(req,res)=>{
-    //const partialFile=fs.readFileSync(process.cwd()+'/views/partials/products.hbs',"utf-8");
-    res.render('main', {productos: productos});
+    res.render('main', {productos: productos, mensajes: mensajes});
 });
 
 io.on('connection', (socket) =>{
@@ -80,6 +84,13 @@ io.on('connection', (socket) =>{
     socket.on('update', (datacliente)=>{
         productos=datacliente;
         io.sockets.emit('broadcast', productos)
+    });
+    //sockets para el chat
+    socket.emit('conversa', mensajes);
+    socket.on('updateconversa', (dataconversa)=>{
+        addConversa(dataconversa);
+        fs.writeFileSync('public/chat.txt',JSON.stringify(mensajes, null, "\t"));
+        io.sockets.emit('broadcastchats', dataconversa);
     });
 });
 

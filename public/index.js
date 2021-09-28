@@ -1,10 +1,17 @@
 const socket=io();
 
 let ArrayProductos=[];
+let arrayConversaciones=[];
 
 //socket inicial para iniciar enviar array
 socket.on('array', (data) =>{
     ArrayProductos=data;
+});
+
+//recibimos las conversaciones
+socket.on('conversa', (data) =>{
+    arrayConversaciones=data;
+    Cargarmensajes()
 });
 
 //socket para recibir cambios de todos los clientes y aplicarlos en las tablas de los mismos
@@ -33,6 +40,14 @@ const update=()=>{
         containerhtml.innerHTML=Cargar();
     }
 };
+
+//actualizamos el chat generalmente
+socket.on('broadcastchats', (data) =>{
+    let bubble = document.createElement('div');
+    bubble.className='bubble';
+    bubble.innerHTML=`${data.correo} ${data.fecha}: ${data.mensaje}`
+    document.getElementById("mensajes").appendChild(bubble);
+});
 
 //template de los datos en la tabla
 const Cargar=()=>{
@@ -68,3 +83,26 @@ document.getElementById("formula").addEventListener("submit", function(e){
     socket.emit('update', ArrayProductos);
     document.getElementById("formula").reset();
 });
+
+    
+const Cargarmensajes=()=>{
+    arrayConversaciones.forEach(c => {
+        let bubble = document.createElement('div');
+        bubble.className='bubble';
+        bubble.innerHTML=`${c.correo} ${c.fecha}: ${c.mensaje}`
+        document.getElementById("mensajes").appendChild(bubble);
+    });
+    document.getElementById("chat").addEventListener("submit", function(e){
+        e.preventDefault();
+        const d=new Date();
+        let objectConversa={
+            correo: e.target[0].value,
+            fecha: `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`,
+            mensaje: e.target[1].value
+        }
+        socket.emit('updateconversa', objectConversa);
+
+    });
+
+};
+

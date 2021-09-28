@@ -1,0 +1,7 @@
+[
+	{
+		"correo": "daniel@coder.com",
+		"fecha": "28/9/2021 12:27:17",
+		"mensaje": "incio chat"
+	}
+]

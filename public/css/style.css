@@ -1,0 +1,38 @@
+*{
+    padding: 0;
+    margin: 0;
+}
+
+#mensajes{
+    overflow-y: scroll;
+    max-height: 300px;
+}
+
+.bubble {
+    position: relative;
+    background: #5e69b5;
+    color: #FFFFFF;
+    font-family: Arial;
+    font-size: 12px;
+    line-height: 32px;
+    text-align: center;
+    width: 442px;
+    height: 34px;
+    border-radius: 10px;
+    padding: 0px;
+    margin-left: 1.5rem;
+    margin-bottom: 5px;
+}
+.bubble:after {
+    content: '';
+    position: absolute;
+    display: block;
+    width: 0;
+    z-index: 1;
+    border-style: solid;
+    border-color: transparent #5e69b5;
+    border-width: 6px 15px 6px 0;
+    top: 50%;
+    left: -15px;
+    margin-top: -6px;
+}
