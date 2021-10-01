@@ -8,9 +8,23 @@
     max-height: 300px;
 }
 
+.elemail{
+    color: blue;
+    font-weight: bold;    
+}
+
+.date{
+    color: brown;
+}
+
+.mensa{
+    font-style: italic;
+    color: green;
+}
+
 .bubble {
     position: relative;
-    background: #5e69b5;
+    background: grey;
     color: #FFFFFF;
     font-family: Arial;
     font-size: 12px;
@@ -30,7 +44,7 @@
     width: 0;
     z-index: 1;
     border-style: solid;
-    border-color: transparent #5e69b5;
+    border-color: transparent grey;
     border-width: 6px 15px 6px 0;
     top: 50%;
     left: -15px;

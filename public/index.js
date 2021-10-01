@@ -44,9 +44,24 @@ const update=()=>{
 //actualizamos el chat generalmente
 socket.on('broadcastchats', (data) =>{
     let bubble = document.createElement('div');
-    bubble.className='bubble';
-    bubble.innerHTML=`${data.correo} ${data.fecha}: ${data.mensaje}`
-    document.getElementById("mensajes").appendChild(bubble);
+        let email = document.createElement('span');
+        let fecha_hora = document.createElement('span');
+        let mensa = document.createElement('span');
+
+        bubble.className='bubble';
+        email.className='elemail';
+        fecha_hora.className='date';
+        mensa.className='mensa';
+
+        email.innerText=`${data.correo} `;
+        fecha_hora.innerText=`${data.fecha}: `;
+        mensa.innerText=`${data.mensaje}`;
+        
+        bubble.appendChild(email);
+        bubble.appendChild(fecha_hora);
+        bubble.appendChild(mensa);
+
+        document.getElementById("mensajes").appendChild(bubble);
 });
 
 //template de los datos en la tabla
@@ -88,8 +103,23 @@ document.getElementById("formula").addEventListener("submit", function(e){
 const Cargarmensajes=()=>{
     arrayConversaciones.forEach(c => {
         let bubble = document.createElement('div');
+        let email = document.createElement('span');
+        let fecha_hora = document.createElement('span');
+        let mensa = document.createElement('span');
+
         bubble.className='bubble';
-        bubble.innerHTML=`${c.correo} ${c.fecha}: ${c.mensaje}`
+        email.className='elemail';
+        fecha_hora.className='date';
+        mensa.className='mensa';
+
+        email.innerText=`${c.correo} `;
+        fecha_hora.innerText=`${c.fecha}: `;
+        mensa.innerText=`${c.mensaje}`;
+        
+        bubble.appendChild(email);
+        bubble.appendChild(fecha_hora);
+        bubble.appendChild(mensa);
+
         document.getElementById("mensajes").appendChild(bubble);
     });
     document.getElementById("chat").addEventListener("submit", function(e){
