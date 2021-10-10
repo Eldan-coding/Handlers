@@ -3,9 +3,9 @@ const socket=io();
 let ArrayProductos=[];
 let arrayConversaciones=[];
 
-//socket inicial para iniciar enviar array
+//socket inicial para iniciar array
 socket.on('array', (data) =>{
-    ArrayProductos=data;
+    ArrayProductos=data;   
 });
 
 //recibimos las conversaciones
@@ -83,22 +83,6 @@ const Cargar=()=>{
     return productoshtml;
 };
 
-//recibo datos desde el formulario
-document.getElementById("formula").addEventListener("submit", function(e){
-    e.preventDefault();
-    let titulo=e.target[0].value
-    let precio=e.target[1].value
-    let miniatura=e.target[2].value
-    ArrayProductos.push({
-		title: titulo,
-		price: precio,
-		thumbnail: miniatura
-    })
-    update()
-    socket.emit('update', ArrayProductos);
-    document.getElementById("formula").reset();
-});
-
     
 const Cargarmensajes=()=>{
     arrayConversaciones.forEach(c => {
@@ -136,3 +120,21 @@ const Cargarmensajes=()=>{
 
 };
 
+
+
+//recibo datos desde el formulario
+document.getElementById("formula").addEventListener("submit", function(e){
+    e.preventDefault();
+    let titulo=e.target[0].value
+    let precio=e.target[1].value
+    let miniatura=e.target[2].value
+    let OBJ={
+		title: titulo,
+		price: precio,
+		thumbnail: miniatura
+    };
+    ArrayProductos.push(OBJ);
+    update();
+    socket.emit('update', OBJ);
+    document.getElementById("formula").reset();
+});

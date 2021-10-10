@@ -1,182 +1,217 @@
-"use strict";
+import express  from "express";
+import handlebars  from "express-handlebars";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import fs from "file-system";
+import options from './MariaDB/options/mariaDB.js';
+import knex from 'knex';
 
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+const app= express();
+const PORT= 8080;
+const router = express.Router();
+const http=new createServer(app);
+const io = new Server(http);
 
-var _express = require("express");
-
-var _express2 = _interopRequireDefault(_express);
-
-var _expressHandlebars = require("express-handlebars");
-
-var _expressHandlebars2 = _interopRequireDefault(_expressHandlebars);
-
-var _http = require("http");
-
-var _socket = require("socket.io");
-
-var _fileSystem = require("file-system");
-
-var _fileSystem2 = _interopRequireDefault(_fileSystem);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-var app = (0, _express2.default)();
-var PORT = 8080;
-var router = _express2.default.Router();
-var http = new _http.createServer(app);
-var io = new _socket.Server(http);
-
-app.use(_express2.default.json());
-app.use(_express2.default.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
 
 app.use('/api', router);
 
-app.use(_express2.default.static('public'));
+app.use(express.static('public'));
 
-var productos = [];
-var id = 0;
-var mensajes = JSON.parse(_fileSystem2.default.readFileSync('public/chat.txt', "utf-8"));
 
-var Producto = function () {
-    function Producto(title, price, thumbnail, id) {
-        _classCallCheck(this, Producto);
+//codigo para SELECT productos
+const  GetProductos= async()=>{
+    let productos=[];
+        const KNEX=knex(options);
+    try {
+        productos=await KNEX.from('productos').select('*'); 
+    } catch (error) {
+        console.log('Error en Select:', e);        
+    } finally {
+        KNEX.destroy();
+        return productos;     
+    }
+}
 
-        this.title = title;
-        this.price = price;
-        this.thumbnail = thumbnail;
-        this.id = id;
+//codigo Insert Into productos
+const addProduct= async(P)=>{
+
+    const KNEX=knex(options);
+
+    const datos = [
+        P
+    ];
+    
+    await KNEX('productos').insert(datos)
+    .then(()=>{
+        console.log("Filas insertadas!");
+        KNEX.destroy();
+    })
+    .catch(e=>{
+        console.log('Error en Insert:', e);
+        KNEX.destroy();
+    })
+
+}
+
+//codigo Update productos
+const UpdateProducto=(P,ID)=>{
+    const KNEX=knex(options);
+
+    KNEX.from('productos').where('id', '=', ID).update(P)
+    .then(() => {
+        console.log('Filas actualizadas!')
+        KNEX.destroy();
+    })
+    .catch(e=>{
+        console.log('Error en Update:', e);
+        KNEX.destroy();
+    });
+}
+
+//Delete Producto
+const DeleteProducto=(ID)=>{
+    const KNEX=knex(options);
+
+    KNEX.from('productos').where('id', '=', ID).del()
+    .then(() => {
+        console.log('Filas borradas!');
+        KNEX.destroy();
+    })
+    .catch(e=>{
+        console.log('Error en Delete:', e);
+        KNEX.destroy();
+    });
+}
+
+const mensajes=JSON.parse(fs.readFileSync('public/chat.txt',"utf-8"));
+
+class Producto{
+    constructor(title,price,thumbnail){
+        this.title=title;
+        this.price=price;
+        this.thumbnail=thumbnail;
     }
 
-    _createClass(Producto, [{
-        key: "getObject",
-        value: function getObject() {
-            return {
-                title: this.title,
-                price: this.price,
-                thumbnail: this.thumbnail,
-                id: this.id
-            };
+    getObject(){
+        return {
+            title:this.title,
+            price:this.price,
+            thumbnail:this.thumbnail
         }
-    }]);
+    }
+}
 
-    return Producto;
-}();
-
-var getID = function getID() {
-    id++;
-    return id;
-};
-
-var addProduct = function addProduct(P) {
-    productos.push(P);
-};
-
-var addConversa = function addConversa(chat) {
+const addConversa=(chat)=>{
     mensajes.push(chat);
-};
+}
 
-var server = http.listen(PORT, function () {
+const server = http.listen (PORT, ()=>{
     console.log("Servidor HTTP corriendo en", server.address().port);
 });
-server.on('error', function (error) {
-    return console.log('Error en servidor', error);
-});
+server.on('error', error=>console.log('Error en servidor',error));
 
-app.engine("hbs", (0, _expressHandlebars2.default)({
-    extname: ".hbs",
-    defaultLayout: "index.hbs",
-    layoutsDir: "views/layouts",
-    partialsDir: "views/partials"
-}));
+
+app.engine(
+    "hbs",
+    handlebars({
+        extname: ".hbs",
+        defaultLayout: "index.hbs",
+        layoutsDir: "views/layouts",
+        partialsDir: "views/partials"
+    })
+);
 
 app.set('views', './views'); // especifica el directorio de vistas
 app.set('view engine', 'hbs'); // registra el motor de plantillas
 
-router.get('/', function (req, res) {
+router.get('/', (req,res)=>{
     res.send("<h1>Inicio Del Programa</h1>");
 });
 
-router.get('/productos/vista', function (req, res) {
-    res.render('main', { productos: productos, mensajes: mensajes });
+router.get('/productos/vista', async (req,res)=>{
+    res.render('main', {productos: await GetProductos()});
 });
 
-io.on('connection', function (socket) {
-    socket.emit("array", productos);
-    socket.on('update', function (datacliente) {
-        productos = datacliente;
-        io.sockets.emit('broadcast', productos);
+//////////////////////////////////////
+io.on('connection', async (socket) =>{
+    socket.emit("array", await GetProductos());
+    socket.on('update', async (nuevoproducto)=>{
+        await addProduct(nuevoproducto);
+        io.sockets.emit('broadcast', await GetProductos());
     });
     //sockets para el chat
-    socket.emit('conversa', mensajes);
-    socket.on('updateconversa', function (dataconversa) {
+   socket.emit('conversa', mensajes);
+    socket.on('updateconversa', (dataconversa)=>{
         addConversa(dataconversa);
-        _fileSystem2.default.writeFileSync('public/chat.txt', JSON.stringify(mensajes, null, "\t"));
+        fs.writeFileSync('public/chat.txt',JSON.stringify(mensajes, null, "\t"));
         io.sockets.emit('broadcastchats', dataconversa);
     });
 });
 
-router.get('/productos/listar', function (req, res) {
-    if (productos.length > 0) {
-        res.json(productos);
-    } else {
-        res.json({ error: 'no hay productos cargados' });
+router.get('/productos/listar', async (req,res)=>{      
+    let auxpro= await GetProductos();
+    console.log(auxpro)
+    if(auxpro.length > 0){
+        res.json(auxpro);
+    }else{
+        res.json({error: 'no hay productos cargados'})
     }
 });
 
-router.get('/productos/listar/:id', function (req, res) {
-    var params = req.params;
-    var resultado = { error: 'producto no encontrado' };
-    for (var index = 0; index < productos.length; index++) {
-        if (productos[index].id == params.id) {
-            resultado = productos[index];
+router.get('/productos/listar/:id', async (req,res)=>{
+    let params = req.params;
+    let resultado={error: 'producto no encontrado'};
+    let productos= await GetProductos();
+    for (let index = 0; index < productos.length; index++) {
+        if(productos[index].id==params.id){
+            resultado=productos[index];
         }
     }
 
-    res.json(resultado);
+    res.json(resultado)
 });
 
-router.post('/productos/guardar', function (req, res) {
-    var body = req.body;
-    console.log(body);
-    var datos = Object.values(body);
+router.post('/productos/guardar',(req,res)=>{
+    let body = req.body;
+    console.log(body)
+    const datos=Object.values(body);
 
-    var product = new Producto(datos[0], datos[1], datos[2], getID());
+    let product=new Producto(datos[0],datos[1],datos[2]);
     addProduct(product.getObject());
-    res.json(product.getObject());
+    res.json(product.getObject())
 });
 
-router.put('/productos/actualizar/:id', function (req, res) {
-    var params = req.params;
-    var body = req.body;
-    var datos = Object.values(body);
+router.put('/productos/actualizar/:id', async (req,res)=>{
+    let params = req.params;
+    let body = req.body;
+    const datos=Object.values(body);
 
-    var resultado = { error: 'producto no actualizado: no se encontro' };
-    for (var index = 0; index < productos.length; index++) {
-        if (productos[index].id == params.id) {
-            var product = new Producto(datos[0], datos[1], datos[2], params.id);
-            productos[index] = product.getObject();
-            resultado = product.getObject();
+    let productos=await GetProductos();
+    let resultado={error: 'producto no actualizado: no se encontro'};
+    for (let index = 0; index < productos.length; index++) {
+        if(productos[index].id==params.id){
+            let product=new Producto(datos[0],datos[1],datos[2]);
+            UpdateProducto(product.getObject(),params.id);
+            resultado=product.getObject();
         }
     }
 
-    res.json(resultado);
+    res.json(resultado)
 });
 
-router.delete('/productos/borrar/:id', function (req, res) {
-    var params = req.params;
+router.delete('/productos/borrar/:id',async (req,res)=>{
+    let params = req.params;
 
-    var arrayAux = [];
-    var resultado = { error: 'producto no eliminado: no se encontro' };
-    for (var index = 0; index < productos.length; index++) {
-        if (productos[index].id == params.id) {
-            resultado = productos[index];
-        } else {
-            arrayAux.push(productos[index]);
+    let resultado={error: 'producto no eliminado: no se encontro'};
+    let productos=await GetProductos();
+    for (let index = 0; index < productos.length; index++) {
+        if(productos[index].id==params.id){
+            resultado=productos[index];
         }
     }
-    productos = arrayAux;
+    DeleteProducto(params.id);
 
-    res.json(resultado);
+    res.json(resultado)
 });

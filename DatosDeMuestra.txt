@@ -8,5 +8,10 @@
 		"title": "mouse",
 		"price": 200,
 		"thumbnail": "https://cdn0.iconfinder.com/data/icons/icons-unleashed-vol1/256/-mouse.png"
+	},
+	{
+		"title": "Speaker",
+		"price": 35,
+		"thumbnail": "https://cdn0.iconfinder.com/data/icons/recreation-2/50/50-256.png"
 	}
 ]
