@@ -4,6 +4,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import fs from "file-system";
 import options from './MariaDB/options/mariaDB.js';
+import optionsSQLlite from './SQLite/options/SQLite3.js';
 import knex from 'knex';
 
 const app= express();
@@ -85,7 +86,39 @@ const DeleteProducto=(ID)=>{
     });
 }
 
-const mensajes=JSON.parse(fs.readFileSync('public/chat.txt',"utf-8"));
+//codigo para obtener mensajes desde SQLite3
+const  GetMensajes= async()=>{
+    let mensajes=[];
+        const KNEX=knex(optionsSQLlite);
+    try {
+        mensajes=await KNEX.from('mensajes').select('*'); 
+    } catch (error) {
+        console.log('Error en Select:', e);        
+    } finally {
+        KNEX.destroy();
+        return mensajes;     
+    }
+}
+
+const addConversa= async(M)=>{
+
+    const KNEX=knex(optionsSQLlite);
+
+    const datos = [
+        M
+    ];
+    
+    await KNEX('mensajes').insert(datos)
+    .then(()=>{
+        console.log("Filas insertadas!");
+        KNEX.destroy();
+    })
+    .catch(e=>{
+        console.log('Error en Insert:', e);
+        KNEX.destroy();
+    })
+
+}
 
 class Producto{
     constructor(title,price,thumbnail){
@@ -101,10 +134,6 @@ class Producto{
             thumbnail:this.thumbnail
         }
     }
-}
-
-const addConversa=(chat)=>{
-    mensajes.push(chat);
 }
 
 const server = http.listen (PORT, ()=>{
@@ -134,7 +163,6 @@ router.get('/productos/vista', async (req,res)=>{
     res.render('main', {productos: await GetProductos()});
 });
 
-//////////////////////////////////////
 io.on('connection', async (socket) =>{
     socket.emit("array", await GetProductos());
     socket.on('update', async (nuevoproducto)=>{
@@ -142,10 +170,9 @@ io.on('connection', async (socket) =>{
         io.sockets.emit('broadcast', await GetProductos());
     });
     //sockets para el chat
-   socket.emit('conversa', mensajes);
-    socket.on('updateconversa', (dataconversa)=>{
-        addConversa(dataconversa);
-        fs.writeFileSync('public/chat.txt',JSON.stringify(mensajes, null, "\t"));
+    socket.emit('conversa', await GetMensajes());
+    socket.on('updateconversa', async (dataconversa)=>{
+        await addConversa(dataconversa);
         io.sockets.emit('broadcastchats', dataconversa);
     });
 });

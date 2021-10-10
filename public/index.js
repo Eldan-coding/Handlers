@@ -43,7 +43,7 @@ const update=()=>{
 
 //actualizamos el chat generalmente
 socket.on('broadcastchats', (data) =>{
-    let bubble = document.createElement('div');
+        let bubble = document.createElement('div');
         let email = document.createElement('span');
         let fecha_hora = document.createElement('span');
         let mensa = document.createElement('span');
@@ -115,7 +115,6 @@ const Cargarmensajes=()=>{
             mensaje: e.target[1].value
         }
         socket.emit('updateconversa', objectConversa);
-
     });
 
 };
