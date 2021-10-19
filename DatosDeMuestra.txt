@@ -1,17 +1,62 @@
 [
 	{
 		"title": "Teclado",
-		"price": 162,
-		"thumbnail": "https://cdn3.iconfinder.com/data/icons/delta/256/Keyboard.png"
+		"price": 150,
+		"thumbnail": "https://cdn3.iconfinder.com/data/icons/delta/256/Keyboard.png",
+		"stock": 100
 	},
 	{
 		"title": "mouse",
 		"price": 200,
-		"thumbnail": "https://cdn0.iconfinder.com/data/icons/icons-unleashed-vol1/256/-mouse.png"
+		"thumbnail": "https://cdn0.iconfinder.com/data/icons/icons-unleashed-vol1/256/-mouse.png",
+		"stock": 100
 	},
 	{
 		"title": "Speaker",
-		"price": 35,
-		"thumbnail": "https://cdn0.iconfinder.com/data/icons/recreation-2/50/50-256.png"
+		"price": 300,
+		"thumbnail": "https://cdn0.iconfinder.com/data/icons/recreation-2/50/50-256.png",
+		"stock": 100
+	},
+	{
+		"title": "CPU",
+		"price": 5000,
+		"thumbnail": "https://cdn4.iconfinder.com/data/icons/modern-technologies-1/32/technology_core_cpu_hardware_processor-256.png",
+		"stock": 100
+	},
+	{
+		"title": "Motherboard",
+		"price": 4000,
+		"thumbnail": "https://cdn0.iconfinder.com/data/icons/computer-hardware-filled-color-0519/64/motherboard-technology-circuit-hardware-256.png",
+		"stock": 100
+	},
+	{
+		"title": "Smartphone",
+		"price": 3200,
+		"thumbnail": "https://cdn3.iconfinder.com/data/icons/flat-set-1/64/flat_set_1-25-256.png",
+		"stock": 100
+	},
+	{
+		"title": "UPS",
+		"price": 1000,
+		"thumbnail": "https://cdn0.iconfinder.com/data/icons/power-2/50/35-256.png",
+		"stock": 100
+	},
+	{
+		"title": "RAM",
+		"price": 1500,
+		"thumbnail": "https://cdn3.iconfinder.com/data/icons/computer-technology-2/64/Ram-memory-hardware-technology-device-circuit-256.png",
+		"stock": 100
+	},
+	{
+		"title": "webcam",
+		"price": 500,
+		"thumbnail": "https://cdn2.iconfinder.com/data/icons/basic-flat-icon-set/128/webcam-256.png",
+		"stock": 100
+	},
+	{
+		"title": "monitor",
+		"price": 2000,
+		"thumbnail": "https://cdn3.iconfinder.com/data/icons/flat-icons-web/40/Monitor-256.png",
+		"stock": 100
 	}
 ]

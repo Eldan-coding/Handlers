@@ -6,12 +6,15 @@ import fs from "file-system";
 import options from './MariaDB/options/mariaDB.js';
 import optionsSQLlite from './SQLite/options/SQLite3.js';
 import knex from 'knex';
+import mongoose from "mongoose";
+import ProductoModel from "./MongoDB/models/Productos.js"
 
 const app= express();
 const PORT= 8080;
 const router = express.Router();
 const http=new createServer(app);
 const io = new Server(http);
+const URLMONGO='mongodb://localhost:27017/ecommerce'
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
@@ -22,15 +25,21 @@ app.use(express.static('public'));
 
 
 //codigo para SELECT productos
-const  GetProductos= async()=>{
+const GetProductos= async()=>{
     let productos=[];
-        const KNEX=knex(options);
     try {
-        productos=await KNEX.from('productos').select('*'); 
+        await mongoose.connect(URLMONGO,
+            { 
+              useNewUrlParser: true,
+              useUnifiedTopology: true,
+              serverSelectionTimeoutMS: 1000
+            })
+        console.log('Conectando a MongoDB...');
+        productos=await ProductoModel.ProductoModel.find({}).lean();
     } catch (error) {
-        console.log('Error en Select:', e);        
+        console.log('Error en find:', error);        
     } finally {
-        KNEX.destroy();
+        await mongoose.connection.close();
         return productos;     
     }
 }
@@ -38,52 +47,60 @@ const  GetProductos= async()=>{
 //codigo Insert Into productos
 const addProduct= async(P)=>{
 
-    const KNEX=knex(options);
-
-    const datos = [
-        P
-    ];
+    try {
+        await mongoose.connect(URLMONGO,
+            { 
+              useNewUrlParser: true,
+              useUnifiedTopology: true,
+              serverSelectionTimeoutMS: 1000
+            })
+        console.log('Conectando a MongoDB...');
+        await ProductoModel.ProductoModel.insertMany(P)
+        console.log("¡Producto insertado!");
+    } catch (error) {
+        console.log('Error en Insert:', error);     
+    } finally {
+        await mongoose.connection.close();
+    }
     
-    await KNEX('productos').insert(datos)
-    .then(()=>{
-        console.log("Filas insertadas!");
-        KNEX.destroy();
-    })
-    .catch(e=>{
-        console.log('Error en Insert:', e);
-        KNEX.destroy();
-    })
-
 }
 
 //codigo Update productos
-const UpdateProducto=(P,ID)=>{
-    const KNEX=knex(options);
-
-    KNEX.from('productos').where('id', '=', ID).update(P)
-    .then(() => {
-        console.log('Filas actualizadas!')
-        KNEX.destroy();
-    })
-    .catch(e=>{
-        console.log('Error en Update:', e);
-        KNEX.destroy();
-    });
+const UpdateProducto= async (P,ID)=>{
+    try {
+        await mongoose.connect(URLMONGO,
+            { 
+              useNewUrlParser: true,
+              useUnifiedTopology: true,
+              serverSelectionTimeoutMS: 1000
+            })
+        console.log('Conectando a MongoDB...');
+        await ProductoModel.ProductoModel.updateMany(ID, {$set: P})
+        console.log("¡Producto Actualizado!");
+    } catch (error) {
+        console.log('Error en UpdateMany:', error);     
+    } finally {
+        await mongoose.connection.close();
+    }
 }
 
 //Delete Producto
-const DeleteProducto=(ID)=>{
-    const KNEX=knex(options);
-
-    KNEX.from('productos').where('id', '=', ID).del()
-    .then(() => {
-        console.log('Filas borradas!');
-        KNEX.destroy();
-    })
-    .catch(e=>{
-        console.log('Error en Delete:', e);
-        KNEX.destroy();
-    });
+const DeleteProducto=async(ID)=>{
+    try {
+        await mongoose.connect(URLMONGO,
+            { 
+              useNewUrlParser: true,
+              useUnifiedTopology: true,
+              serverSelectionTimeoutMS: 1000
+            })
+        console.log('Conectando a MongoDB...');
+        await ProductoModel.ProductoModel.deleteMany(ID)
+        console.log("¡Producto Eliminado!");
+    } catch (error) {
+        console.log('Error en Delete:', error);     
+    } finally {
+        await mongoose.connection.close();
+    }
 }
 
 //codigo para obtener mensajes desde SQLite3
@@ -214,13 +231,14 @@ router.put('/productos/actualizar/:id', async (req,res)=>{
     let params = req.params;
     let body = req.body;
     const datos=Object.values(body);
+    let oid=mongoose.Types.ObjectId(params.id);
 
     let productos=await GetProductos();
     let resultado={error: 'producto no actualizado: no se encontro'};
     for (let index = 0; index < productos.length; index++) {
-        if(productos[index].id==params.id){
+        if(productos[index]._id.equals(oid)){
             let product=new Producto(datos[0],datos[1],datos[2]);
-            UpdateProducto(product.getObject(),params.id);
+            UpdateProducto(product.getObject(),{_id: oid});
             resultado=product.getObject();
         }
     }
@@ -230,15 +248,16 @@ router.put('/productos/actualizar/:id', async (req,res)=>{
 
 router.delete('/productos/borrar/:id',async (req,res)=>{
     let params = req.params;
+    let oid=mongoose.Types.ObjectId(params.id);
 
     let resultado={error: 'producto no eliminado: no se encontro'};
     let productos=await GetProductos();
     for (let index = 0; index < productos.length; index++) {
-        if(productos[index].id==params.id){
+        if(productos[index]._id.equals(oid)){
             resultado=productos[index];
         }
     }
-    DeleteProducto(params.id);
+    DeleteProducto({_id: oid});
 
     res.json(resultado)
 });
