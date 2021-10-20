@@ -2,12 +2,13 @@ import express  from "express";
 import handlebars  from "express-handlebars";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import fs from "file-system";
+/* import fs from "file-system";
 import options from './MariaDB/options/mariaDB.js';
 import optionsSQLlite from './SQLite/options/SQLite3.js';
-import knex from 'knex';
+import knex from 'knex'; */
 import mongoose from "mongoose";
 import ProductoModel from "./MongoDB/models/Productos.js"
+import MensajesModel from "./MongoDB/models/Mensajes.js"
 
 const app= express();
 const PORT= 8080;
@@ -106,35 +107,41 @@ const DeleteProducto=async(ID)=>{
 //codigo para obtener mensajes desde SQLite3
 const  GetMensajes= async()=>{
     let mensajes=[];
-        const KNEX=knex(optionsSQLlite);
+    
     try {
-        mensajes=await KNEX.from('mensajes').select('*'); 
+        await mongoose.connect(URLMONGO,
+            { 
+              useNewUrlParser: true,
+              useUnifiedTopology: true,
+              serverSelectionTimeoutMS: 1000
+            })
+        console.log('Conectando a MongoDB...');
+        mensajes=await MensajesModel.MensajesModel.find({}).lean();
     } catch (error) {
-        console.log('Error en Select:', e);        
+        console.log('Error en find:', error);        
     } finally {
-        KNEX.destroy();
+        await mongoose.connection.close();
         return mensajes;     
     }
 }
 
 const addConversa= async(M)=>{
 
-    const KNEX=knex(optionsSQLlite);
-
-    const datos = [
-        M
-    ];
-    
-    await KNEX('mensajes').insert(datos)
-    .then(()=>{
-        console.log("Filas insertadas!");
-        KNEX.destroy();
-    })
-    .catch(e=>{
-        console.log('Error en Insert:', e);
-        KNEX.destroy();
-    })
-
+    try {
+        await mongoose.connect(URLMONGO,
+            { 
+              useNewUrlParser: true,
+              useUnifiedTopology: true,
+              serverSelectionTimeoutMS: 1000
+            })
+        console.log('Conectando a MongoDB...');
+        await MensajesModel.MensajesModel.insertMany(M)
+        console.log("¡Mensaje guardado!");
+    } catch (error) {
+        console.log('Error en Insert:', error);     
+    } finally {
+        await mongoose.connection.close();
+    }
 }
 
 class Producto{
