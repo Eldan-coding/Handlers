@@ -9,6 +9,7 @@ import knex from 'knex'; */
 import mongoose from "mongoose";
 import ProductoModel from "./MongoDB/models/Productos.js"
 import MensajesModel from "./MongoDB/models/Mensajes.js"
+import faker from "faker";
 
 const app= express();
 const PORT= 8080;
@@ -267,4 +268,42 @@ router.delete('/productos/borrar/:id',async (req,res)=>{
     DeleteProducto({_id: oid});
 
     res.json(resultado)
+});
+
+
+//Desafio Test View
+const ramdomdata=(q)=>{
+    if (q==0) return {error: "no hay productos"}
+    let ramdomproductos='';
+    for (let i = 0; i < q; i++) {
+        ramdomproductos+=`
+        <tr>
+            <td>${faker.commerce.productName()}</td>
+            <td>${faker.commerce.price()}</td>
+            <td><img width="100px" src=${faker.image.avatar()} alt=""></td>
+        </tr>`
+    }
+    return(`
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <div id="main-container">
+    <table class="table table-dark table-striped text-center">
+        <tbody id="container-productos">
+            <tr>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Foto</th>
+            </tr>
+            ${ramdomproductos}
+            </tbody>
+            </table>
+            </div>`)  
+}
+
+router.get('/productos/vista-test', (req,res)=>{
+    res.send(ramdomdata(10));
+});
+
+router.get('/productos/vista-test/:cant', (req,res)=>{
+    let params = req.params;
+    res.send(ramdomdata(params.cant));
 });
