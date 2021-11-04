@@ -10,7 +10,8 @@ socket.on('array', (data) =>{
 
 //recibimos las conversaciones
 socket.on('conversa', (data) =>{
-    arrayConversaciones=data;
+    arrayConversaciones=data[1].messages;
+    document.getElementById("compresion").innerText=`Porcentaje de compresion de mensajes ${(JSON.stringify(data[1]).length/JSON.stringify(data[0]).length)*100}%`
     Cargarmensajes()
 });
 
@@ -47,19 +48,31 @@ socket.on('broadcastchats', (data) =>{
         let email = document.createElement('span');
         let fecha_hora = document.createElement('span');
         let mensa = document.createElement('span');
+        let thumb = document.createElement('img');
 
         bubble.className='bubble';
         email.className='elemail';
         fecha_hora.className='date';
         mensa.className='mensa';
 
-        email.innerText=`${data.correo} `;
-        fecha_hora.innerText=`${data.fecha}: `;
-        mensa.innerText=`${data.mensaje}`;
+        document.getElementById("compresion").innerText=`Porcentaje de compresion de mensajes ${(JSON.stringify(data[1]).length/JSON.stringify(data[0]).length)*100}%`
+
+        let Ucorreo=data[1].messages[data[1].messages.length-1].author.id;
+        let Ufecha=data[1].messages[data[1].messages.length-1].fecha;
+        let Utext=data[1].messages[data[1].messages.length-1].text;
+        let Uavatar=data[1].messages[data[1].messages.length-1].author.avatar;
+        
+        email.innerText=`${Ucorreo} `;
+        fecha_hora.innerText=`${Ufecha}: `;
+        mensa.innerText=`${Utext} `;
+        thumb.setAttribute('src', Uavatar);
+        thumb.width = '20';
         
         bubble.appendChild(email);
         bubble.appendChild(fecha_hora);
         bubble.appendChild(mensa);
+        bubble.appendChild(thumb);
+        
 
         document.getElementById("mensajes").appendChild(bubble);
 });
@@ -83,26 +96,30 @@ const Cargar=()=>{
     return productoshtml;
 };
 
-    
 const Cargarmensajes=()=>{
     arrayConversaciones.forEach(c => {
         let bubble = document.createElement('div');
         let email = document.createElement('span');
         let fecha_hora = document.createElement('span');
         let mensa = document.createElement('span');
+        let thumb = document.createElement('img');
 
+        
         bubble.className='bubble';
         email.className='elemail';
         fecha_hora.className='date';
         mensa.className='mensa';
 
-        email.innerText=`${c.correo} `;
+        email.innerText=`${c.author.id} `;
         fecha_hora.innerText=`${c.fecha}: `;
-        mensa.innerText=`${c.mensaje}`;
+        mensa.innerText=`${c.text} `;
+        thumb.setAttribute('src', c.author.avatar);
+        thumb.width = '30';
         
         bubble.appendChild(email);
         bubble.appendChild(fecha_hora);
         bubble.appendChild(mensa);
+        bubble.appendChild(thumb);
 
         document.getElementById("mensajes").appendChild(bubble);
     });
@@ -110,9 +127,16 @@ const Cargarmensajes=()=>{
         e.preventDefault();
         const d=new Date();
         let objectConversa={
-            correo: e.target[0].value,
+            author:{
+                id: e.target[0].value,
+                nombre: e.target[1].value,
+                apellido: e.target[2].value,
+                edad: e.target[3].value,
+                alias: e.target[4].value,
+                avatar: e.target[5].value
+            },
             fecha: `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`,
-            mensaje: e.target[1].value
+            text: e.target[6].value
         }
         socket.emit('updateconversa', objectConversa);
     });

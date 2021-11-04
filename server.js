@@ -10,6 +10,8 @@ import mongoose from "mongoose";
 import ProductoModel from "./MongoDB/models/Productos.js"
 import MensajesModel from "./MongoDB/models/Mensajes.js"
 import faker from "faker";
+import { denormalize, normalize,schema } from "normalizr";
+import util from "util";
 
 const app= express();
 const PORT= 8080;
@@ -122,7 +124,30 @@ const  GetMensajes= async()=>{
         console.log('Error en find:', error);        
     } finally {
         await mongoose.connection.close();
-        return mensajes;     
+        let c=1;
+        mensajes.map((mes)=>{
+            mes.author=mes.author[0]
+            mes._id=c
+            c++
+        })
+        let messages={
+            id: '666',
+            messages: mensajes            
+        }
+        
+        const authorEsquema=new schema.Entity("autores")
+        const messagesEsquema= new schema.Entity("mensaje",{
+            author: authorEsquema
+        },{idAttribute: "_id"})
+        const conversaEsquema=new schema.Entity("conversacion",{
+            messages: [messagesEsquema]
+        })
+
+
+        const normalizar=normalize(messages,conversaEsquema);
+        const desnormalizar=denormalize(normalizar.result, conversaEsquema, normalizar.entities)
+        
+        return [normalizar,desnormalizar]
     }
 }
 
@@ -135,7 +160,7 @@ const addConversa= async(M)=>{
               useUnifiedTopology: true,
               serverSelectionTimeoutMS: 1000
             })
-        console.log('Conectando a MongoDB...');
+        console.log('Conectando al MongoDB(insert)...');
         await MensajesModel.MensajesModel.insertMany(M)
         console.log("¡Mensaje guardado!");
     } catch (error) {
@@ -198,7 +223,7 @@ io.on('connection', async (socket) =>{
     socket.emit('conversa', await GetMensajes());
     socket.on('updateconversa', async (dataconversa)=>{
         await addConversa(dataconversa);
-        io.sockets.emit('broadcastchats', dataconversa);
+        io.sockets.emit('broadcastchats', await GetMensajes());//recuperamos los datos (normalizados y desnormalizados)
     });
 });
 
