@@ -12,6 +12,8 @@ import MensajesModel from "./MongoDB/models/Mensajes.js"
 import faker from "faker";
 import { denormalize, normalize,schema } from "normalizr";
 import util from "util";
+import session from "express-session";
+import { nextTick } from "process";
 
 const app= express();
 const PORT= 8080;
@@ -205,12 +207,54 @@ app.engine(
 app.set('views', './views'); // especifica el directorio de vistas
 app.set('view engine', 'hbs'); // registra el motor de plantillas
 
+
+router.use(session({
+    secret: "fdgs5fsa",
+    resave: true,
+    saveUninitialized: true
+}))
+
 router.get('/', (req,res)=>{
     res.send("<h1>Inicio Del Programa</h1>");
 });
 
-router.get('/productos/vista', async (req,res)=>{
-    res.render('main', {productos: await GetProductos()});
+const autenticarLogin= async (req,res,next)=>{
+    if(req.session.user && req.session){
+        res.render('main', {productos: await GetProductos()});
+    }else{
+        next()
+    }
+}
+
+const autenticarApp=(req,res,next)=>{
+    if(req.session.user && req.session){
+        next()
+    }else{
+        res.sendFile('login.html', { root: "./public" });
+    }
+}
+
+router.get('/login', autenticarLogin, async (req,res)=>{
+    res.sendFile('login.html', { root: "./public" });
+});
+
+router.post('/login', (req,res)=>{
+    req.session.user=req.body.user;
+    req.session.cookie.maxAge=60000;
+    res.redirect("productos/vista")
+});
+
+router.get('/logout', (req,res)=>{
+    let user=req.session.user
+    req.session.destroy()
+    res.send(`
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <div class="alert alert-primary" role="alert">
+    Hasta Luego, ${user} </div>`)
+});
+
+router.get('/productos/vista', autenticarApp, async (req,res)=>{
+    res.render('main', {productos: await GetProductos(), user: req.session.user});
 });
 
 io.on('connection', async (socket) =>{
