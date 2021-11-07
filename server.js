@@ -13,7 +13,8 @@ import faker from "faker";
 import { denormalize, normalize,schema } from "normalizr";
 import util from "util";
 import session from "express-session";
-import { nextTick } from "process";
+import MongoStore from "connect-mongo";
+const advancedoptions = {useNewUrlParser:true, useUnifiedTopology: true}
 
 const app= express();
 const PORT= 8080;
@@ -207,11 +208,23 @@ app.engine(
 app.set('views', './views'); // especifica el directorio de vistas
 app.set('view engine', 'hbs'); // registra el motor de plantillas
 
-
-router.use(session({
+/*Desafio de Log-in
+ router.use(session({
     secret: "fdgs5fsa",
     resave: true,
-    saveUninitialized: true
+    saveUninitialized: true,
+    cookie: {maxAge:600000}
+})) */
+
+router.use(session({
+    store: MongoStore.create({
+        mongoUrl: "mongodb+srv://Dan:DanUsandoMongo@cluster0.4w0r4.mongodb.net/myFirstDatabase?retryWrites=true&w=majority",
+        mongoOptions: advancedoptions
+    }),
+    secret: "QPODJSDljhdsa",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {maxAge:600000}
 }))
 
 router.get('/', (req,res)=>{
@@ -240,7 +253,6 @@ router.get('/login', autenticarLogin, async (req,res)=>{
 
 router.post('/login', (req,res)=>{
     req.session.user=req.body.user;
-    req.session.cookie.maxAge=60000;
     res.redirect("productos/vista")
 });
 
@@ -254,6 +266,9 @@ router.get('/logout', (req,res)=>{
 });
 
 router.get('/productos/vista', autenticarApp, async (req,res)=>{
+    let usuariotemp=req.session.user
+    req.session.user=""
+    req.session.user=usuariotemp;
     res.render('main', {productos: await GetProductos(), user: req.session.user});
 });
 
