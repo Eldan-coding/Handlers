@@ -2,8 +2,8 @@ import express from "express";
 import handlebars from "express-handlebars";
 import { createServer } from "http";
 import { Server } from "socket.io";
-/* import fs from "file-system";
-import options from './MariaDB/options/mariaDB.js';
+import fs from "file-system";
+/* import options from './MariaDB/options/mariaDB.js';
 import optionsSQLlite from './SQLite/options/SQLite3.js';
 import knex from 'knex'; */
 import mongoose from "mongoose";
@@ -18,12 +18,22 @@ import MongoStore from "connect-mongo";
 const advancedoptions = { useNewUrlParser: true, useUnifiedTopology: true }
 import passport from "passport";
 import { Strategy } from "passport-local";
+import { Strategy as FacebookStrategy } from "passport-facebook";
+
+//Para convertir en HTTPS
+import https from 'https';
+import path from 'path'; 
+const httpsOptions = {
+    key: fs.readFileSync('./SSLCert/cert.key'),
+    cert: fs.readFileSync('./SSLCert/cert.pem')
+}
+
 
 const app = express();
-const PORT = 8080;
+const PORT = 8443;
 const router = express.Router();
-const http = new createServer(app);
-const io = new Server(http);
+const WebProtocol = https.createServer(httpsOptions,app);
+const io = new Server(WebProtocol);
 const URLMONGO = 'mongodb://localhost:27017/ecommerce'
 
 app.use(express.json());
@@ -249,8 +259,8 @@ class Producto {
     }
 }
 
-const server = http.listen(PORT, () => {
-    console.log("Servidor HTTP corriendo en", server.address().port);
+const server = WebProtocol.listen(PORT, () => {
+    console.log("Servidor HTTPS corriendo en", server.address().port);
 });
 server.on('error', error => console.log('Error en servidor', error));
 
@@ -301,7 +311,6 @@ passport.use('signup', new Strategy({
             return done(null, false, console.log(user, 'Usuario existente'));
         } else {
             await SaveCredentials(user, clave);
-            console.log(credenciales);
             return done(null, await GetCredentials(user))
         }
     }
@@ -325,6 +334,23 @@ passport.use('login', new Strategy({
         }
     })
 );
+
+passport.use(new FacebookStrategy({
+    clientID: '1592840727737592',
+    clientSecret: '0b7019db4c08bc888caf6762197754cb',
+    callbackURL: "https://localhost:8443/api/auth/facebook/vista",
+    profileFields: ['id', 'displayName', 'emails', 'photos']
+  },
+  async function(accessToken, refreshToken, profile, cb) {
+    let credenciales = await GetCredentials(profile.displayName);console.log(profile.emails)
+    if (credenciales != undefined) {
+        return cb(null, credenciales);
+    } else {
+        await SaveCredentials(profile.displayName, profile.id);//usamos el display como user y el id como clave
+        return cb(null, await GetCredentials(profile.displayName))
+    }
+  }
+));
 
 passport.serializeUser((user, done) => {
     done(null, user._id);
@@ -355,6 +381,17 @@ const autenticarApp = (req, res, next) => {
         res.sendFile('login.html', { root: "./public" });
     }
 }
+
+///////FACEBOOK 
+router.get('/auth/facebook',
+  passport.authenticate('facebook'));
+
+router.get('/auth/facebook/vista',
+  passport.authenticate('facebook', { failureRedirect: 'falloLogin' }),
+  function(req, res) {
+    res.redirect("/api/productos/vista");
+  });
+
 
 router.get('/login', autenticarLogin_signup, async (req, res) => res.sendFile('login.html', { root: "./public" }));
 router.post('/login', passport.authenticate('login', { failureRedirect: 'falloLogin' }), (req, res) => res.redirect("productos/vista"));
