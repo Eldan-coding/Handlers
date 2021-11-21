@@ -19,6 +19,7 @@ const advancedoptions = { useNewUrlParser: true, useUnifiedTopology: true }
 import passport from "passport";
 import { Strategy } from "passport-local";
 import { Strategy as FacebookStrategy } from "passport-facebook";
+import { fork } from "child_process";
 
 //Para convertir en HTTPS
 import https from 'https';
@@ -35,6 +36,16 @@ const router = express.Router();
 const WebProtocol = https.createServer(httpsOptions,app);
 const io = new Server(WebProtocol);
 const URLMONGO = 'mongodb://localhost:27017/ecommerce'
+
+let parametrosDeInicio = process.argv.slice(2);
+let PUERTO;
+let FACEBOOK_CLIENT_ID = '1592840727737592';
+let FACEBOOK_CLIENT_SECRET = '0b7019db4c08bc888caf6762197754cb';
+if(parametrosDeInicio.length==3){
+    PUERTO=parametrosDeInicio[0];
+    FACEBOOK_CLIENT_ID=parametrosDeInicio[1];
+    FACEBOOK_CLIENT_SECRET=parametrosDeInicio[2];
+}
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -259,7 +270,7 @@ class Producto {
     }
 }
 
-const server = WebProtocol.listen(PORT, () => {
+const server = WebProtocol.listen(PUERTO || PORT, () => {
     console.log("Servidor HTTPS corriendo en", server.address().port);
 });
 server.on('error', error => console.log('Error en servidor', error));
@@ -336,8 +347,8 @@ passport.use('login', new Strategy({
 );
 
 passport.use(new FacebookStrategy({
-    clientID: '1592840727737592',
-    clientSecret: '0b7019db4c08bc888caf6762197754cb',
+    clientID: FACEBOOK_CLIENT_ID,
+    clientSecret: FACEBOOK_CLIENT_SECRET,
     callbackURL: "https://localhost:8443/api/auth/facebook/vista",
     profileFields: ['id', 'displayName', 'emails', 'photos']
   },
@@ -364,6 +375,33 @@ passport.deserializeUser(async (id, done) => {
 
 router.get('/', (req, res) => {
     res.send("<h1>Inicio Del Programa</h1>");
+});
+
+router.get('/info', (req, res) => {
+    res.json({
+        argumentos:  process.argv,
+        OS: process.platform,
+        nodeVersion: process.version,
+        memoria: process.memoryUsage(),
+        rutaEjecucion: process.argv[1],
+        processID: process.pid,
+        carpetaCorriente: process.cwd()
+    });
+});
+
+
+router.get('/ramdoms', (req, res) => {
+    const NA = fork("./numerosAleatorios.js");
+    NA.send('start');
+    NA.on('message', datos=>res.end(datos));
+    console.log("no bloquea");
+});
+
+router.get('/ramdoms/:canti', (req, res) => {
+    const NA2 = fork("./numerosAleatorios.js");
+    NA2.send(req.params.canti);
+    NA2.on('array', datos=>res.end(datos));
+    console.log("no bloquea");
 });
 
 const autenticarLogin_signup = async (req, res, next) => {
