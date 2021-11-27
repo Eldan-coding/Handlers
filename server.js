@@ -20,6 +20,8 @@ import passport from "passport";
 import { Strategy } from "passport-local";
 import { Strategy as FacebookStrategy } from "passport-facebook";
 import { fork } from "child_process";
+import { cpus } from "os";
+import cluster from "cluster";
 
 //Para convertir en HTTPS
 import https from 'https';
@@ -28,7 +30,6 @@ const httpsOptions = {
     key: fs.readFileSync('./SSLCert/cert.key'),
     cert: fs.readFileSync('./SSLCert/cert.pem')
 }
-
 
 const app = express();
 const PORT = 8443;
@@ -41,7 +42,8 @@ let parametrosDeInicio = process.argv.slice(2);
 let PUERTO;
 let FACEBOOK_CLIENT_ID = '1592840727737592';
 let FACEBOOK_CLIENT_SECRET = '0b7019db4c08bc888caf6762197754cb';
-if(parametrosDeInicio.length==3){
+let MODO = parametrosDeInicio[3];
+if(parametrosDeInicio.length>3){
     PUERTO=parametrosDeInicio[0];
     FACEBOOK_CLIENT_ID=parametrosDeInicio[1];
     FACEBOOK_CLIENT_SECRET=parametrosDeInicio[2];
@@ -270,11 +272,21 @@ class Producto {
     }
 }
 
-const server = WebProtocol.listen(PUERTO || PORT, () => {
-    console.log("Servidor HTTPS corriendo en", server.address().port);
-});
-server.on('error', error => console.log('Error en servidor', error));
 
+let server;
+
+if ((cluster.isMaster && MODO=="CLUSTER") || cluster.isWorker){
+    server = WebProtocol.listen(PUERTO || PORT, () => {
+        console.log("Servidor HTTPS corriendo en", server.address().port);
+    });
+    server.on('error', error => console.log('Error en servidor', error));   
+    console.log(`Servidor Corriendo en Modo ${MODO}`)
+}else if(MODO=="FORK" || MODO== undefined){
+    cluster.fork();
+    cluster.on('exit', (worker, code, signal) => { 
+        console.log(`Worker ${worker.process.pid} died`)
+    });
+}
 
 app.engine(
     "hbs",
@@ -385,7 +397,8 @@ router.get('/info', (req, res) => {
         memoria: process.memoryUsage(),
         rutaEjecucion: process.argv[1],
         processID: process.pid,
-        carpetaCorriente: process.cwd()
+        carpetaCorriente: process.cwd(),
+        NumeroProcesadores: cpus().length
     });
 });
 
