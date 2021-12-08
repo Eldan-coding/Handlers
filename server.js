@@ -61,8 +61,8 @@ app.use(express.static('public'));
 
 log4js.configure({
     appenders:{
-        fileWarnAppender: { type: "file", filename: 'pubic/logs/warn.log'},
-        fileErrorAppender: { type: "file", filename: 'pubic/logs/error.log'},
+        fileWarnAppender: { type: "file", filename: 'public/logs/warn.log'},
+        fileErrorAppender: { type: "file", filename: 'public/logs/error.log'},
         consoleAppender: { type: "console"}
     },
     categories:{
