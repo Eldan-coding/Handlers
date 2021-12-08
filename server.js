@@ -22,6 +22,8 @@ import { Strategy as FacebookStrategy } from "passport-facebook";
 import { fork } from "child_process";
 import { cpus } from "os";
 import cluster from "cluster";
+import compression from "compression";
+import log4js from "log4js";
 
 //Para convertir en HTTPS
 import https from 'https';
@@ -51,10 +53,28 @@ if(parametrosDeInicio.length>3){
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(compression());
 
 app.use('/api', router);
 
 app.use(express.static('public'));
+
+log4js.configure({
+    appenders:{
+        fileWarnAppender: { type: "file", filename: 'pubic/logs/warn.log'},
+        fileErrorAppender: { type: "file", filename: 'pubic/logs/error.log'},
+        consoleAppender: { type: "console"}
+    },
+    categories:{
+        default: { appenders: ["consoleAppender"], level: "trace"},
+        warn: { appenders: ["fileWarnAppender"], level: "warn"},
+        error: { appenders: ["fileErrorAppender"], level: "error"}
+    }
+});
+
+const logger= log4js.getLogger();
+const loggerW= log4js.getLogger("warn");
+const loggerE= log4js.getLogger("error");
 
 //Obtener Usuario by ID
 const GetCredentialsBy_ID = async (ID) => {
@@ -66,10 +86,11 @@ const GetCredentialsBy_ID = async (ID) => {
                 useUnifiedTopology: true,
                 serverSelectionTimeoutMS: 1000
             })
-        console.log('Conectando a MongoDB para credenciales');
+        logger.info('Conectando a MongoDB para credenciales');
         user = await UsuarioModel.UsuarioModel.findOne({ '_id': ID }).lean();
     } catch (error) {
-        console.log('Error en find:', error);
+        logger.error('Error en find:', error);
+        loggerE.error('Error en find:', error);
     } finally {
         await mongoose.connection.close();
         return user;
@@ -277,14 +298,14 @@ let server;
 
 if ((cluster.isMaster && MODO=="CLUSTER") || cluster.isWorker){
     server = WebProtocol.listen(PUERTO || PORT, () => {
-        console.log("Servidor HTTPS corriendo en", server.address().port);
+        logger.info("Servidor HTTPS corriendo en", server.address().port);
     });
     server.on('error', error => console.log('Error en servidor', error));   
-    console.log(`Servidor Corriendo en Modo ${MODO}`)
+    logger.info(`Servidor Corriendo en Modo ${MODO}`)
 }else if(MODO=="FORK" || MODO== undefined){
     cluster.fork();
     cluster.on('exit', (worker, code, signal) => { 
-        console.log(`Worker ${worker.process.pid} died`)
+        loggerW.warn(`Worker ${worker.process.pid} died`)
     });
 }
 

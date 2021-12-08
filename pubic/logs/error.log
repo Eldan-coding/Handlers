@@ -1,0 +1,4 @@
+[2021-12-08T13:23:25.751] [ERROR] error - Error en find: ReferenceError: IcD is not defined
+    at GetCredentialsBy_ID (file:///D:/Users/Daniel/Desktop/CoderHouse/Backend/Plantillas1/server.js:90:65)
+    at processTicksAndRejections (internal/process/task_queues.js:95:5)
+    at async file:///D:/Users/Daniel/Desktop/CoderHouse/Backend/Plantillas1/server.js:404:19
