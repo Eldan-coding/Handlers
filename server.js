@@ -21,7 +21,7 @@ import { Strategy } from "passport-local";
 import { Strategy as FacebookStrategy } from "passport-facebook";
 import { fork } from "child_process";
 import { cpus } from "os";
-import cluster from "cluster";
+//import cluster from "cluster";
 import compression from "compression";
 import log4js from "log4js";
 
@@ -294,9 +294,11 @@ class Producto {
 }
 
 
-let server;
+const server = WebProtocol.listen(PUERTO || PORT, () => {
+    logger.info("Servidor HTTPS corriendo en", server.address().port);
+});;
 
-if ((cluster.isMaster && MODO=="CLUSTER") || cluster.isWorker){
+/* if ((cluster.isMaster && MODO=="CLUSTER") || cluster.isWorker){
     server = WebProtocol.listen(PUERTO || PORT, () => {
         logger.info("Servidor HTTPS corriendo en", server.address().port);
     });
@@ -307,7 +309,7 @@ if ((cluster.isMaster && MODO=="CLUSTER") || cluster.isWorker){
     cluster.on('exit', (worker, code, signal) => { 
         loggerW.warn(`Worker ${worker.process.pid} died`)
     });
-}
+} */
 
 app.engine(
     "hbs",
@@ -411,6 +413,16 @@ router.get('/', (req, res) => {
 });
 
 router.get('/info', (req, res) => {
+    /* console.log({
+        argumentos:  process.argv,
+        OS: process.platform,
+        nodeVersion: process.version,
+        memoria: process.memoryUsage(),
+        rutaEjecucion: process.argv[1],
+        processID: process.pid,
+        carpetaCorriente: process.cwd(),
+        NumeroProcesadores: cpus().length
+    }) */
     res.json({
         argumentos:  process.argv,
         OS: process.platform,
@@ -425,16 +437,16 @@ router.get('/info', (req, res) => {
 
 
 router.get('/ramdoms', (req, res) => {
-    const NA = fork("./numerosAleatorios.js");
+    /* const NA = fork("./numerosAleatorios.js");
     NA.send('start');
-    NA.on('message', datos=>res.end(datos));
+    NA.on('message', datos=>res.end(datos)); */
     console.log("no bloquea");
 });
 
 router.get('/ramdoms/:canti', (req, res) => {
-    const NA2 = fork("./numerosAleatorios.js");
+    /* const NA2 = fork("./numerosAleatorios.js");
     NA2.send(req.params.canti);
-    NA2.on('array', datos=>res.end(datos));
+    NA2.on('array', datos=>res.end(datos)); */
     console.log("no bloquea");
 });
 
