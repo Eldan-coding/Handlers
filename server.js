@@ -24,6 +24,10 @@ import { cpus } from "os";
 //import cluster from "cluster";
 import compression from "compression";
 import log4js from "log4js";
+import nodemailer from "nodemailer";
+import twilio from "twilio";
+
+const twilioClient= twilio("ACe1a9239a92a467ef59af396f6ab13392", "4be4f842b61cc0e059ae5b6ec7ba9cc0");
 
 //Para convertir en HTTPS
 import https from 'https';
@@ -293,6 +297,19 @@ class Producto {
     }
 }
 
+const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+        user: "daniel.castrov.98@gmail.com",
+        pass: "hdwwbhcnftknrmsn"
+    },
+    tls: {
+      rejectUnauthorized: false
+    }
+});
+
 
 const server = WebProtocol.listen(PUERTO || PORT, () => {
     logger.info("Servidor HTTPS corriendo en", server.address().port);
@@ -388,7 +405,7 @@ passport.use(new FacebookStrategy({
     profileFields: ['id', 'displayName', 'emails', 'photos']
   },
   async function(accessToken, refreshToken, profile, cb) {
-    let credenciales = await GetCredentials(profile.displayName);console.log(profile.emails)
+    let credenciales = await GetCredentials(profile.displayName);
     if (credenciales != undefined) {
         return cb(null, credenciales);
     } else {
@@ -460,6 +477,13 @@ const autenticarLogin_signup = async (req, res, next) => {
 
 const autenticarApp = (req, res, next) => {
     if (req.isAuthenticated()) {
+        const d=new Date();
+         transporter.sendMail({
+            from: "NodeJs Login y Logout",
+            to: `daniel.castrov.98@gmail.com`,
+            subject: `login ${req.user.user} ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`,
+            html: "Datos de Login"
+        })
         next()
     } else {
         res.sendFile('login.html', { root: "./public" });
@@ -489,6 +513,13 @@ router.get('/falloRegistro', (req, res) => res.sendFile('errorRegistro.html', { 
 router.get('/logout', (req, res) => {
     let user = req.user.user;
     req.logout();
+    const d=new Date();
+    transporter.sendMail({
+       from: "NodeJs Login y Logout",
+       to: `daniel.castrov.98@gmail.com`,
+       subject: `logout ${user} ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()} ${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`,
+       html: "Datos de Logout"
+   })
     res.send(`
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <div class="alert alert-primary" role="alert">
@@ -506,6 +537,14 @@ io.on('connection', async (socket) => {
     //sockets para el chat
     socket.emit('conversa', await GetMensajes());
     socket.on('updateconversa', async (dataconversa) => {
+        const regex = /administrador/gm
+        if (regex.test(dataconversa.text)){
+            await twilioClient.messages.create({
+                body: `El usuario '${dataconversa.nombre}' envio: '${dataconversa.text}' `,
+                from: "+19402835485",
+                to: "+573004405955"
+            })
+        }
         await addConversa(dataconversa);
         io.sockets.emit('broadcastchats', await GetMensajes());//recuperamos los datos (normalizados y desnormalizados)
     });
